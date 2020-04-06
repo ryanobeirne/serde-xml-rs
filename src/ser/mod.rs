@@ -205,9 +205,7 @@ where
         variant_index: u32,
         variant: &'static str,
     ) -> Result<Self::Ok> {
-        Err(Error::UnsupportedOperation {
-            operation: "serialize_unit_variant".to_string(),
-        })
+        self.write_wrapped(name, variant)
     }
 
     fn serialize_newtype_struct<T: ?Sized + Serialize>(
@@ -415,5 +413,27 @@ mod tests {
         let got = String::from_utf8(buffer).unwrap();
         println!("{}", got);
         panic!();
+    }
+
+    #[test]
+    fn test_serialize_unit_variant() {
+        #[derive(Deserialize, Serialize)]
+        enum Latin {
+            Alpha,
+            Beta,
+            Gamma,
+        }
+
+        let a = Latin::Alpha;
+        let should_be = "<Latin>Alpha</Latin>";
+        let mut buffer = Vec::new();
+
+        {
+            let mut ser = Serializer::new(&mut buffer);
+            a.serialize(&mut ser).unwrap();
+        }
+
+        let got = String::from_utf8(buffer).unwrap();
+        assert_eq!(got, should_be);
     }
 }
